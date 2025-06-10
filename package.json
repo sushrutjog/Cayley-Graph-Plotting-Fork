@@ -22,7 +22,8 @@
   "scripts": {
     "watch-ts": "nodemon",
     "build": "rimraf ./docs/js && tsc-esm",
-    "start": "npm run build && http-server docs -p 9999 -o ."
+    "start": "npm run build && http-server docs -p 9999 -o .",
+    "test": "jest"
   },
   "author": "JuliaPoo",
   "license": "ISC"
