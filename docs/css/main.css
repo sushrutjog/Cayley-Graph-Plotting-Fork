@@ -135,6 +135,12 @@ body {
     grid-column-start: 2;
 }
 
+mark {
+    background-color: #ffa500;
+    color: #000;
+    padding: 0 0.1em;
+}
+
 #end-result {
     width: 100%;
 

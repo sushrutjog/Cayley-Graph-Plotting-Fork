@@ -188,6 +188,26 @@ function highlight_activegid() {
   })
 }
 
+function highlight_text(elem, words) {
+  const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const walker = document.createTreeWalker(elem, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((n) => {
+    let html = n.nodeValue;
+    words.forEach((w) => {
+      if (!w) return;
+      const re = new RegExp(escape(w), 'gi');
+      html = html.replace(re, '<mark>$&</mark>');
+    });
+    if (html !== n.nodeValue) {
+      const span = document.createElement('span');
+      span.innerHTML = html;
+      n.replaceWith(...span.childNodes);
+    }
+  });
+}
+
 function ui_init(group_listing, matrep) {
   const [plt, scene] = init_plot();
   const linkforcectx = plt.d3Force('link')
@@ -261,19 +281,23 @@ function ui_init(group_listing, matrep) {
   const create_group_listing = () => {
     const f = FILTER.value.toLowerCase();
     const d = parseInt(DEGREE.value);
-    
-    let result = group_listing.slice(1); 
+    const words = f.split(" ").filter((w) => w.length > 0);
+
+    let result = group_listing.slice(1);
     if (!isNaN(d))
       result = result.filter((ginfo) => ginfo[0] == d);
     result = result.filter((ginfo) => {
       const str = (ginfo[3] + ginfo[4]).toLowerCase();
-      return f.split(" ").every((w) => str.includes(w))
+      return words.every((w) => str.includes(w));
     });
 
-    // TODO: Highlight the matched text
     empty_listing();
-    result.slice(0, NRESULT).forEach(add_listing);
-    create_end_listing(result.length > NRESULT 
+    result.slice(0, NRESULT).forEach((ginfo) => {
+      add_listing(ginfo);
+      const item = RESULTBOX.lastChild;
+      highlight_text(item, words);
+    });
+    create_end_listing(result.length > NRESULT
       ? `Truncated ${NRESULT}/${result.length}`
       : "~~ End ~~");
     highlight_activegid();
