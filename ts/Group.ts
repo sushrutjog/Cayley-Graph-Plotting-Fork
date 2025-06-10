@@ -37,6 +37,7 @@ export class Group {
   get cayley(): CayleyGraph {
     const graph: CayleyGraph = [[this.id, []]];
     const visited: GroupElement[] = [this.id];
+    const visitedMap: Map<string, number> = new Map([[this.id.key(), 0]]);
     const stack: number[] = [0];
     while (stack.length > 0) {
       const nidx = stack.pop()!;
@@ -45,11 +46,12 @@ export class Group {
       this.gens.forEach((g) => {
         // left multiplication
         const h = g.mul(e);
-        const idx = visited.indexOf(h);
-        if (idx == -1) {
+        const idx = visitedMap.get(h.key());
+        if (idx === undefined) {
           cs.push(graph.length);
           stack.push(graph.length);
           visited.push(h);
+          visitedMap.set(h.key(), visited.length - 1);
           graph.push([h, []]);
           return;
         }
@@ -62,6 +64,10 @@ export class Group {
 
 export class GroupElement {
   constructor(readonly grp: Group, readonly mat: Matrix) {}
+
+  key(): string {
+    return JSON.stringify(this.mat.mat);
+  }
 
   mul(o: GroupElement): GroupElement {
     assert(this.grp == o.grp, "Multiplying elements of different groups");
