@@ -8,7 +8,7 @@ export class Group {
   readonly id: GroupElement;
   private readonly dim: number;
   private readonly fp: MatrixField;
-  readonly elements: Set<GroupElement>;
+  readonly elements: Map<string, GroupElement>;
 
   constructor(matrep: Matrix[]) {
     assert(matrep.length > 0, "Matrix has no generators");
@@ -25,9 +25,9 @@ export class Group {
     this.fp = matrep[0]!.fp;
     this.id = new GroupElement(this, Matrix.id(this.dim, this.fp));
 
-    this.elements = new Set();
-    this.gens.forEach((g) => this.elements.add(g));
-    this.elements.add(this.id);
+    this.elements = new Map();
+    this.gens.forEach((g) => this.elements.set(g.key(), g));
+    this.elements.set(this.id.key(), this.id);
   }
 
   get ngen(): number {
@@ -73,14 +73,11 @@ export class GroupElement {
     assert(this.grp == o.grp, "Multiplying elements of different groups");
 
     const g = new GroupElement(this.grp, this.mat.mul(o.mat));
-    for (const e of this.grp.elements.values()) if (e.equal(g)) return e;
+    const existing = this.grp.elements.get(g.key());
+    if (existing !== undefined) return existing;
 
-    this.grp.elements.add(g);
+    this.grp.elements.set(g.key(), g);
     return g;
   }
 
-  private equal(o: GroupElement) {
-    assert(this.grp == o.grp, "Comparing elements of different groups");
-    return this.mat.equal(o.mat);
-  }
 }
