@@ -9,9 +9,9 @@ export class Group {
         this.dim = matrep[0].dim;
         this.fp = matrep[0].fp;
         this.id = new GroupElement(this, Matrix.id(this.dim, this.fp));
-        this.elements = new Set();
-        this.gens.forEach((g) => this.elements.add(g));
-        this.elements.add(this.id);
+        this.elements = new Map();
+        this.gens.forEach((g) => this.elements.set(g.key(), g));
+        this.elements.set(this.id.key(), this.id);
     }
     get ngen() {
         return this.gens.length;
@@ -53,14 +53,10 @@ export class GroupElement {
     mul(o) {
         assert(this.grp == o.grp, "Multiplying elements of different groups");
         const g = new GroupElement(this.grp, this.mat.mul(o.mat));
-        for (const e of this.grp.elements.values())
-            if (e.equal(g))
-                return e;
-        this.grp.elements.add(g);
+        const existing = this.grp.elements.get(g.key());
+        if (existing !== undefined)
+            return existing;
+        this.grp.elements.set(g.key(), g);
         return g;
-    }
-    equal(o) {
-        assert(this.grp == o.grp, "Comparing elements of different groups");
-        return this.mat.equal(o.mat);
     }
 }
